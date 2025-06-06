@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Modern 2025 Color System - Clean & Professional */
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
+    
+    /* Card with subtle elevation */
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+    
+    /* Primary - Professional blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* Secondary - Warm gray */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 46%;
+    
+    /* Muted - Soft backgrounds */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    
+    /* Accent - Purple highlight */
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
+    
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Borders - Subtle */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+    
+    /* Semantic Category Colors - Professional Palette */
+    --category-startpunt: 43 96% 56%;
+    --category-infrastructuur: 217 91% 60%;
+    --category-sectoren: 142 71% 45%;
+    --category-strategie: 262 83% 58%;
+    --category-templates: 24 95% 53%;
+    --category-organisatie: 340 82% 62%;
+    
+    /* Radius - Soft corners */
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Clean Typography */
+  h1 {
+    @apply text-3xl md:text-4xl font-bold tracking-tight text-foreground;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight text-foreground;
+  }
+  
+  h3 {
+    @apply text-lg md:text-xl font-semibold text-foreground;
+  }
+  
+  /* Clean Focus */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2;
+  }
+  
+  /* Selection */
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+  
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/50;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+@layer components {
+  /* Modern Card */
+  .card-modern {
+    @apply bg-card rounded-xl border border-border shadow-sm;
+    @apply hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* Thread Card Design */
+  .thread-card-modern {
+    @apply bg-card rounded-xl border border-border p-5 md:p-6;
+    @apply hover:border-primary/30 hover:shadow-md transition-all duration-200;
+  }
+  
+  /* Clean Button */
+  .btn-modern {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2;
+    @apply text-sm font-medium transition-all duration-200;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+  }
+  
+  /* Tag Pill */
+  .tag-modern {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full;
+    @apply bg-muted text-muted-foreground text-xs font-medium;
+    @apply hover:bg-muted/80 transition-colors;
+  }
+  
+  /* Sidebar Item */
+  .nav-item-modern {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg;
+    @apply text-sm font-medium text-muted-foreground;
+    @apply hover:bg-muted hover:text-foreground transition-all duration-200;
+  }
+  
+  .nav-item-active {
+    @apply bg-primary/10 text-primary hover:bg-primary/15;
+  }
+  
+  /* Section Container */
+  .section-container {
+    @apply max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8;
+  }
+  
+  /* Header Section */
+  .header-section {
+    @apply mb-8 space-y-3;
+  }
+  
+  /* Stat Badge */
+  .stat-badge {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg;
+    @apply bg-muted text-muted-foreground text-sm font-medium;
+  }
+  
+  /* Avatar Ring */
+  .avatar-ring {
+    @apply ring-2 ring-background;
+  }
+  
+  /* Empty State Modern */
+  .empty-state-modern {
+    @apply text-center py-16 px-6;
+  }
+  
+  /* Input Field Modern */
+  .input-field {
+    @apply w-full rounded-lg border border-input bg-background px-3 py-2;
+    @apply text-sm placeholder:text-muted-foreground;
+    @apply focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30;
+  }
+  
+  /* Category Colors */
+  .category-startpunt {
+    @apply bg-yellow-50 text-yellow-900 border-yellow-200;
+  }
+  
+  .category-infrastructuur {
+    @apply bg-blue-50 text-blue-900 border-blue-200;
+  }
+  
+  .category-sectoren {
+    @apply bg-green-50 text-green-900 border-green-200;
+  }
+  
+  .category-strategie {
+    @apply bg-purple-50 text-purple-900 border-purple-200;
+  }
+  
+  .category-templates {
+    @apply bg-orange-50 text-orange-900 border-orange-200;
+  }
+  
+  .category-organisatie {
+    @apply bg-pink-50 text-pink-900 border-pink-200;
+  }
+  
+  /* Tiptap Editor Custom Styles */
+  .tiptap-editor .ProseMirror {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 1rem;
+    min-height: 300px;
+  }
+  
+  .tiptap-editor .ProseMirror:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    color: rgb(156, 163, 175);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+  
+  /* Sparkle Donation Button Animations */
+  @keyframes sparkle-gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes sparkle-pulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    50% {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+  }
+  
+  @keyframes sparkle-twinkle {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+}
