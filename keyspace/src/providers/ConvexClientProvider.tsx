@@ -9,7 +9,17 @@ interface ConvexClientProviderProps {
   children: ReactNode;
 }
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "https://wandering-mandrill-316.convex.cloud";
+// Environment variable validation with runtime safety
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+if (!convexUrl) {
+  throw new Error("NEXT_PUBLIC_CONVEX_URL environment variable is required");
+}
+
+if (!clerkPublishableKey) {
+  throw new Error("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable is required");
+}
 
 const convex = new ConvexReactClient(convexUrl);
 
@@ -17,9 +27,7 @@ export default function ConvexClientProvider({
   children,
 }: ConvexClientProviderProps) {
   return (
-    <ClerkProvider 
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
-    >
+    <ClerkProvider publishableKey={clerkPublishableKey}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         {children}
       </ConvexProviderWithClerk>

@@ -55,6 +55,8 @@ export const seedData = mutation({
     const thread1 = await ctx.db.insert("threads", {
       kanaalId: discussieChannel,
       titel: "Welke AI-modellen gebruiken jullie?",
+      slug: "welke-ai-modellen-gebruiken-jullie",
+      threadNumber: 1,
       inhoud: "Ik ben benieuwd naar de ervaringen van anderen met verschillende AI-modellen. Welke modellen gebruiken jullie en waarom?",
       auteurId: testUserId,
       upvotes: [],
@@ -65,6 +67,8 @@ export const seedData = mutation({
     const thread2 = await ctx.db.insert("threads", {
       kanaalId: discussieChannel,
       titel: "Privacy en AI: hoe gaan jullie hiermee om?",
+      slug: "privacy-en-ai-hoe-gaan-jullie-hiermee-om",
+      threadNumber: 2,
       inhoud: "Privacy is een belangrijk onderwerp bij AI-implementatie. Hoe zorgen jullie ervoor dat klantdata veilig blijft?",
       auteurId: testUserId,
       upvotes: [],

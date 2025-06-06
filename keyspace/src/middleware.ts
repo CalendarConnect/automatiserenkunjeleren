@@ -14,17 +14,24 @@ const isProtectedRoute = createRouteMatcher([
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth()
-  
-  // Protect routes that require authentication
-  if (isProtectedRoute(req)) {
-    await auth.protect()
+  try {
+    const { userId } = await auth()
     
-    // If user is authenticated but not on onboarding page, check if they need onboarding
-    if (userId && !isOnboardingRoute(req)) {
-      // For now, we'll let the onboarding page itself handle the redirect logic
-      // since we need to check the Convex user data to see if profile is complete
+    // Protect routes that require authentication
+    if (isProtectedRoute(req)) {
+      await auth.protect()
+      
+      // If user is authenticated but not on onboarding page, check if they need onboarding
+      if (userId && !isOnboardingRoute(req)) {
+        // For now, we'll let the onboarding page itself handle the redirect logic
+        // since we need to check the Convex user data to see if profile is complete
+      }
     }
+    
+    return NextResponse.next()
+  } catch (error) {
+    console.error('Middleware error:', error)
+    return NextResponse.redirect(new URL('/sign-in', req.url))
   }
 })
 
