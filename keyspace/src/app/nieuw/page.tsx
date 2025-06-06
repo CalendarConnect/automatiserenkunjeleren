@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -16,7 +16,7 @@ import { useCurrentUser } from "@/lib/useCurrentUser";
 import { createThreadUrl } from "../../../convex/lib/utils";
 import OnboardingCheck from "@/components/OnboardingCheck";
 
-export default function NieuweThreadPage() {
+function NieuweThreadContent() {
   const { user: currentUser, isLoading: userLoading } = useCurrentUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -394,5 +394,23 @@ export default function NieuweThreadPage() {
       </div>
       </div>
     </OnboardingCheck>
+  );
+}
+
+export default function NieuweThreadPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen">
+        <KanaalSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
+            <p className="text-muted-foreground">Nieuwe thread pagina laden...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <NieuweThreadContent />
+    </Suspense>
   );
 } 

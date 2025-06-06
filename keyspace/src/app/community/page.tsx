@@ -248,7 +248,7 @@ export default function CommunityPage() {
                                   <Lightbulb className="w-5 h-5 text-purple-600" />
                                 </div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Leer van experts</h3>
-                                <p className="text-sm text-gray-600">Toegang tot praktijkervaringen en werkende voorbeelden van andere MKB'ers</p>
+                                <p className="text-sm text-gray-600">Toegang tot praktijkervaringen en werkende voorbeelden van andere MKBers</p>
                               </div>
                               
                               <div className="bg-white/60 rounded-xl p-4 text-center">

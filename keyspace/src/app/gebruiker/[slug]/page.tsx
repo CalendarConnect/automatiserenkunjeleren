@@ -31,6 +31,16 @@ export default function GebruikerPage() {
   
   // Voor nu zoeken we op clerkId (slug), later kunnen we een echte slug field toevoegen
   const user = useQuery(api.users.getUserByClerkId, { clerkId: userSlug });
+  
+  // Move hooks to top level to avoid conditional hook calling
+  const userThreads = useQuery(
+    api.threads.getThreadsByAuthor, 
+    user ? { auteurId: user._id } : "skip"
+  );
+  const userComments = useQuery(
+    api.comments.getCommentsByAuthor, 
+    user ? { auteurId: user._id } : "skip"
+  );
 
   // Redirect non-admins
   if (!isLoading && !isAdmin) {
@@ -56,14 +66,6 @@ export default function GebruikerPage() {
       </div>
     );
   }
-  const userThreads = useQuery(
-    api.threads.getThreadsByAuthor, 
-    user ? { auteurId: user._id } : "skip"
-  );
-  const userComments = useQuery(
-    api.comments.getCommentsByAuthor, 
-    user ? { auteurId: user._id } : "skip"
-  );
 
   const getInitials = (name: string) => {
     return name

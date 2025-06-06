@@ -78,7 +78,7 @@ export default function AutomatiserenKunJeLeren() {
               </p>
 
               <p className="text-xl text-slate-500 mb-12 leading-relaxed max-w-4xl mx-auto">
-                Want juist doordat we hier met z'n allen zitten, met mensen uit verschillende vakgebieden, 
+                Want juist doordat we hier allemaal zitten, met mensen uit verschillende vakgebieden, 
                 met verschillende achtergronden en niveaus, <strong>leren we van elkaar</strong>.
               </p>
 

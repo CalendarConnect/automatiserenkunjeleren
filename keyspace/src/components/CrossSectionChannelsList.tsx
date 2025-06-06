@@ -239,6 +239,11 @@ export default function CrossSectionChannelsList({
   // Get all channel IDs for the sortable context
   const allChannelIds = Object.values(channelsBySectionId).flat().map(c => c._id);
 
+  // Move the no-section droppable hook to top level
+  const { setNodeRef: setNoSectionRef, isOver: isNoSectionOver } = useDroppable({
+    id: 'section-no-section',
+  });
+
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
   }
@@ -346,51 +351,41 @@ export default function CrossSectionChannelsList({
           })}
 
           {/* Channels without section */}
-          {(() => {
-            const { setNodeRef: setNoSectionRef, isOver: isNoSectionOver } = useDroppable({
-              id: 'section-no-section',
-            });
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">📋</span>
+              <h2 className="text-lg font-semibold text-gray-600">
+                Kanalen zonder sectie
+              </h2>
+              <span className="text-sm text-muted-foreground">
+                ({(channelsBySectionId['no-section'] || []).length} kanalen)
+              </span>
+            </div>
             
-            const noSectionChannels = channelsBySectionId['no-section'] || [];
-            
-            return (
-              <div className="bg-card border border-border rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg">📋</span>
-                  <h2 className="text-lg font-semibold text-gray-600">
-                    Kanalen zonder sectie
-                  </h2>
-                  <span className="text-sm text-muted-foreground">
-                    ({noSectionChannels.length} kanalen)
-                  </span>
+            <div 
+              ref={setNoSectionRef}
+              className={`space-y-2 min-h-[60px] transition-colors ${
+                isNoSectionOver ? 'bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-2' : ''
+              }`}
+            >
+              {(channelsBySectionId['no-section'] || []).length === 0 ? (
+                <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                  <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>Sleep kanalen hierheen</p>
                 </div>
-                
-                <div 
-                  ref={setNoSectionRef}
-                  className={`space-y-2 min-h-[60px] transition-colors ${
-                    isNoSectionOver ? 'bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-2' : ''
-                  }`}
-                >
-                  {noSectionChannels.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                      <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>Sleep kanalen hierheen</p>
-                    </div>
-                  ) : (
-                    noSectionChannels.map((channel) => (
-                      <SortableChannelItem
-                        key={channel._id}
-                        channel={channel}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onToggleVisibility={onToggleVisibility}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            );
-          })()}
+              ) : (
+                (channelsBySectionId['no-section'] || []).map((channel) => (
+                  <SortableChannelItem
+                    key={channel._id}
+                    channel={channel}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onToggleVisibility={onToggleVisibility}
+                  />
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </SortableContext>
     </DndContext>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Filter, Hash, Users, FileText } from "lucide-react";
 import { useViewAwareAdmin } from "@/lib/useViewAwareRole";
 
-export default function ZoekenPage() {
+function ZoekenContent() {
   const { isAdmin } = useViewAwareAdmin();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
@@ -196,7 +196,7 @@ export default function ZoekenPage() {
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-muted-foreground">
-                          Geen threads gevonden voor "{searchTerm}"
+                          Geen threads gevonden voor &quot;{searchTerm}&quot;
                         </p>
                       </div>
                     )}
@@ -260,7 +260,7 @@ export default function ZoekenPage() {
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-muted-foreground">
-                          Geen gebruikers gevonden voor "{searchTerm}"
+                          Geen gebruikers gevonden voor &quot;{searchTerm}&quot;
                         </p>
                       </div>
                     )}
@@ -272,5 +272,23 @@ export default function ZoekenPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ZoekenPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen">
+        <KanaalSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
+            <p className="text-muted-foreground">Zoekpagina laden...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ZoekenContent />
+    </Suspense>
   );
 } 

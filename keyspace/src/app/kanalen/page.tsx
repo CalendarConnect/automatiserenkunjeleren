@@ -219,7 +219,7 @@ export default function KanalenPage() {
                 Geen kanalen gevonden
               </h3>
               <p className="text-gray-600 mb-4">
-                Er zijn geen kanalen van het type "{selectedType}"
+                Er zijn geen kanalen van het type &quot;{selectedType}&quot;
               </p>
               <button
                 onClick={() => setSelectedType("alle")}

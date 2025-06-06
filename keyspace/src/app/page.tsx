@@ -105,7 +105,7 @@ export default function Home() {
                       Experts die al jaren bouwen. En iedereen daartussen.
                     </p>
                     <p className="text-lg text-gray-500 mb-10 max-w-3xl mx-auto">
-                      Want juist doordat we hier met z'n allen zitten, met mensen uit verschillende vakgebieden, 
+                      Want juist doordat we hier allemaal zitten, met mensen uit verschillende vakgebieden, 
                       met verschillende achtergronden en niveaus, leren we van elkaar.
                     </p>
                     <div className="flex flex-wrap gap-4 justify-center">

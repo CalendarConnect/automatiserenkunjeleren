@@ -332,7 +332,7 @@ Tip: Je kunt Enter gebruiken om nieuwe alinea's te maken!"
                     <Tag className="w-4 h-4" />
                     Expertise Tags (optioneel)
                   </Label>
-                  <p className="text-gray-500 mb-3">Voeg tags toe die je expertise beschrijven (bijv. "AI", "Marketing", "Python", "n8n")</p>
+                  <p className="text-gray-500 mb-3">Voeg tags toe die je expertise beschrijven (bijv. &quot;AI&quot;, &quot;Marketing&quot;, &quot;Python&quot;, &quot;n8n&quot;)</p>
                   
                   <div className="flex flex-wrap gap-2 mb-3">
                     {profileData.tags.map((tag) => (
