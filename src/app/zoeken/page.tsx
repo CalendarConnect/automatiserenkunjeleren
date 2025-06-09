@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import KanaalSidebar from "@/components/KanaalSidebar";
 import ThreadCard from "@/components/ThreadCard";
+import TopNavigation from "@/components/TopNavigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,8 +74,10 @@ function ZoekenContent() {
   };
 
   return (
-    <div className="flex h-screen">
-      <KanaalSidebar />
+    <div className="flex flex-col h-screen">
+      <TopNavigation />
+      <div className="flex flex-1 overflow-hidden">
+        <KanaalSidebar />
       
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto">
@@ -271,6 +274,7 @@ function ZoekenContent() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

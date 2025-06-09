@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { useConvexMutation } from "@/lib/useConvexFunction";
 import { useRouter } from "next/navigation";
@@ -28,7 +29,7 @@ import {
   CheckCircle
 } from "lucide-react";
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const { user: clerkUser, isLoaded } = useUser();
   const { user: convexUser, isLoading: convexLoading } = useCurrentUser();
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function OnboardingPage() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   
   const updateUser = useConvexMutation("users:updateUser");
+  const createUser = useConvexMutation("users:createUser");
   
   const [profileData, setProfileData] = useState({
     naam: "",
@@ -54,21 +56,32 @@ export default function OnboardingPage() {
     loadCloudinaryScript();
   }, []);
 
-  // Initialize with Clerk and existing Convex data
+  // Initialize with Clerk data immediately when available
   useEffect(() => {
-    if (clerkUser && isLoaded && convexUser && !convexLoading) {
+    if (clerkUser && isLoaded) {
       setProfileData(prev => ({
         ...prev,
-        naam: convexUser.naam || clerkUser.fullName || clerkUser.firstName || "",
-        functie: convexUser.functie || "",
-        organisatie: convexUser.organisatie || "",
-        bio: convexUser.bio || "",
-        tags: convexUser.tags || [],
-        avatarUrl: convexUser.avatarUrl || clerkUser.imageUrl || "",
-        linkedinUrl: convexUser.linkedinUrl || "",
+        naam: prev.naam || clerkUser.fullName || clerkUser.firstName || "",
+        avatarUrl: prev.avatarUrl || clerkUser.imageUrl || "",
       }));
     }
-  }, [clerkUser, isLoaded, convexUser, convexLoading]);
+  }, [clerkUser, isLoaded]);
+
+  // Update with Convex data when available
+  useEffect(() => {
+    if (convexUser && !convexLoading) {
+      setProfileData(prev => ({
+        ...prev,
+        naam: convexUser.naam || prev.naam,
+        functie: convexUser.functie || prev.functie,
+        organisatie: convexUser.organisatie || prev.organisatie,
+        bio: convexUser.bio || prev.bio,
+        tags: convexUser.tags || prev.tags,
+        avatarUrl: convexUser.avatarUrl || prev.avatarUrl,
+        linkedinUrl: convexUser.linkedinUrl || prev.linkedinUrl,
+      }));
+    }
+  }, [convexUser, convexLoading]);
 
   // Redirect if user already has complete profile
   useEffect(() => {
@@ -114,25 +127,41 @@ export default function OnboardingPage() {
   };
 
   const handleSubmit = async () => {
-    if (!convexUser) return;
+    if (!clerkUser) return;
     
     setIsSubmitting(true);
     try {
-      await updateUser({
-        userId: convexUser._id,
-        naam: profileData.naam,
-        functie: profileData.functie,
-        organisatie: profileData.organisatie,
-        bio: profileData.bio,
-        tags: profileData.tags,
-        avatarUrl: profileData.avatarUrl,
-        linkedinUrl: profileData.linkedinUrl,
-      });
+      if (convexUser) {
+        // Update existing user
+        await updateUser({
+          userId: convexUser._id,
+          naam: profileData.naam,
+          functie: profileData.functie,
+          organisatie: profileData.organisatie,
+          bio: profileData.bio,
+          tags: profileData.tags,
+          avatarUrl: profileData.avatarUrl,
+          linkedinUrl: profileData.linkedinUrl,
+        });
+      } else {
+        // Create new user
+        await createUser({
+          clerkId: clerkUser.id,
+          email: clerkUser.emailAddresses[0]?.emailAddress || "",
+          naam: profileData.naam,
+          functie: profileData.functie,
+          organisatie: profileData.organisatie,
+          bio: profileData.bio,
+          tags: profileData.tags,
+          avatarUrl: profileData.avatarUrl,
+          linkedinUrl: profileData.linkedinUrl,
+        });
+      }
       
       // Redirect to community page
       router.push("/community");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error saving profile:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -142,7 +171,7 @@ export default function OnboardingPage() {
   const canProceedToStep3 = canProceedToStep2 && profileData.bio;
   const canComplete = canProceedToStep3 && rulesAccepted;
 
-  if (!isLoaded || convexLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
@@ -603,5 +632,38 @@ Tip: Je kunt Enter gebruiken om nieuwe alinea's te maken!"
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <>
+      <Unauthenticated>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Je moet ingelogd zijn</h1>
+            <p className="text-gray-600 mb-6">Log in om je profiel in te vullen</p>
+            <Button onClick={() => window.location.href = '/sign-in'}>
+              Inloggen
+            </Button>
+          </div>
+        </div>
+      </Unauthenticated>
+      
+      <AuthLoading>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+            <p className="text-lg text-gray-600">Welkom voorbereiden...</p>
+          </div>
+        </div>
+      </AuthLoading>
+      
+      <Authenticated>
+        <OnboardingContent />
+      </Authenticated>
+    </>
   );
 } 

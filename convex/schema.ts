@@ -14,6 +14,13 @@ export default defineSchema({
     linkedinUrl: v.optional(v.string()),
     role: v.optional(v.union(v.literal("admin"), v.literal("member"), v.literal("moderator"))),
     aangemaaktOp: v.number(),
+    // Onboarding progress
+    onboardingCompleted: v.optional(v.boolean()),
+    onboardingSteps: v.optional(v.object({
+      shared: v.boolean(),
+      introduced: v.boolean(),
+      prompt: v.boolean(),
+    })),
   })
     .index("by_clerk_id", ["clerkId"]),
 

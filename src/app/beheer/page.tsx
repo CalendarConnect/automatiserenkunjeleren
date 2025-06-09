@@ -8,6 +8,7 @@ import ColorPicker from "@/components/ColorPicker";
 import SortableSectiesList from "@/components/SortableSectiesList";
 import SortableChannelsList from "@/components/SortableChannelsList";
 import CrossSectionChannelsList from "@/components/CrossSectionChannelsList";
+import ConvexWrapper from "@/components/ConvexWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,9 +35,10 @@ import {
   ShieldCheck,
   Crown,
   Eye,
+  EyeOff,
 } from "lucide-react";
 
-export default function BeheerPage() {
+function BeheerContent() {
   const [selectedTab, setSelectedTab] = useState<"channels" | "sticky" | "secties" | "users">("channels");
   
   // Authentication and authorization
@@ -44,7 +46,7 @@ export default function BeheerPage() {
   const { isAuthenticated: convexAuthenticated, isLoading: convexAuthLoading } = useConvexAuth();
   const { user: currentUser, isLoading: userLoading } = useCurrentUser();
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
-  const { setViewingAsMember } = useViewMode();
+  const { isViewingAsMember, setViewingAsMember } = useViewMode();
   
   const [editingChannel, setEditingChannel] = useState<string | null>(null);
   const [newChannelData, setNewChannelData] = useState({
@@ -465,14 +467,25 @@ export default function BeheerPage() {
                   Beheer
                 </h1>
               </div>
-              <Button
-                onClick={() => setViewingAsMember(true)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                Bekijk als lid
-              </Button>
+              {isViewingAsMember ? (
+                <Button
+                  onClick={() => setViewingAsMember(false)}
+                  variant="outline"
+                  className="flex items-center gap-2 border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+                >
+                  <EyeOff className="w-4 h-4" />
+                  Terug naar Admin Modus
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setViewingAsMember(true)}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Bekijk als lid
+                </Button>
+              )}
             </div>
             <p className="text-muted-foreground">
               Beheer kanalen, sticky posts en andere instellingen
@@ -983,5 +996,13 @@ export default function BeheerPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BeheerPage() {
+  return (
+    <ConvexWrapper>
+      <BeheerContent />
+    </ConvexWrapper>
   );
 } 

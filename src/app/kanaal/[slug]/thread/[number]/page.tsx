@@ -6,22 +6,19 @@ import TopNavigation from "@/components/TopNavigation";
 import { useParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../../../../convex/_generated/api";
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
 
-export default function ThreadPage() {
+export default function KanaalThreadPage() {
   const { user: currentUser } = useCurrentUser();
   const params = useParams();
-  const slug = params.slug as string;
+  const channelSlug = params.slug as string;
+  const threadNumber = parseInt(params.number as string);
   
-  // Extract thread number from slug (format: "title-slug-123")
-  const slugParts = slug.split('-');
-  const threadNumber = parseInt(slugParts[slugParts.length - 1]);
-  const titleSlug = slugParts.slice(0, -1).join('-');
-  
-  const thread = useQuery(api.threads.getThreadBySlugAndNumber, { 
-    slug: titleSlug, 
+  // Get thread by channel and thread number
+  const thread = useQuery(api.threads.getThreadByChannelAndNumber, { 
+    channelSlug: channelSlug,
     threadNumber: threadNumber 
   });
 
@@ -61,17 +58,13 @@ export default function ThreadPage() {
               >
                 Kanalen
               </Link>
-              {thread.channel && (
-                <>
-                  <ChevronRight className="w-4 h-4" />
-                  <Link 
-                    href={`/kanaal/${thread.channel.slug}`}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {thread.channel.naam}
-                  </Link>
-                </>
-              )}
+              <ChevronRight className="w-4 h-4" />
+              <Link 
+                href={`/kanaal/${channelSlug}`}
+                className="hover:text-foreground transition-colors"
+              >
+                {thread.channel?.naam || channelSlug}
+              </Link>
               <ChevronRight className="w-4 h-4" />
               <span className="text-foreground font-medium truncate max-w-xs">
                 {thread.titel}

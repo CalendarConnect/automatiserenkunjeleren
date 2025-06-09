@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ConvexClientProvider from "@/providers/ConvexClientProvider";
-import UserSync from "@/components/UserSync";
-import { ViewModeProvider } from "@/contexts/ViewModeContext";
-import AdminViewModeBar from "@/components/AdminViewModeBar";
+import { ClerkProvider } from "@clerk/nextjs";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ConditionalConvexProvider from "@/components/ConditionalConvexProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,13 +27,45 @@ export default function RootLayout({
     <html lang="nl">
       <body className={inter.className}>
         <ErrorBoundary>
-          <ConvexClientProvider>
-            <ViewModeProvider>
-              <UserSync />
-              <AdminViewModeBar />
+          <ClerkProvider 
+            publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            afterSignInUrl="/community"
+            afterSignUpUrl="/onboarding"
+            appearance={{
+              elements: {
+                footer: { display: "none !important" },
+                footerText: { display: "none !important" },
+                footerPages: { display: "none !important" },
+                footerPagesLink: { display: "none !important" },
+                poweredBy: { display: "none !important" },
+                clerkBranding: { display: "none !important" },
+              }
+            }}
+            localization={{
+              signUp: {
+                start: {
+                  title: "Word lid van Automatiseren kun je leren",
+                  subtitle: "Sluit je aan bij onze community en leer samen automatiseren",
+                  actionText: "Heb je al een account?",
+                  actionLink: "Inloggen",
+                },
+              },
+              signIn: {
+                start: {
+                  title: "Welkom terug bij Automatiseren kun je leren",
+                  subtitle: "Log in om door te gaan naar de community",
+                  actionText: "Nog geen account?",
+                  actionLink: "Registreren",
+                },
+              },
+            }}
+          >
+            <ConditionalConvexProvider>
               {children}
-            </ViewModeProvider>
-          </ConvexClientProvider>
+            </ConditionalConvexProvider>
+          </ClerkProvider>
         </ErrorBoundary>
       </body>
     </html>

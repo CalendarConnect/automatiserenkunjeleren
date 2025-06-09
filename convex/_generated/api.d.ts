@@ -17,10 +17,12 @@ import type * as channels from "../channels.js";
 import type * as comments from "../comments.js";
 import type * as lib_getUser from "../lib/getUser.js";
 import type * as lib_utils from "../lib/utils.js";
+import type * as promptbibliotheek from "../promptbibliotheek.js";
 import type * as secties from "../secties.js";
 import type * as seed from "../seed.js";
 import type * as seedChannels from "../seedChannels.js";
 import type * as threads from "../threads.js";
+import type * as toolbibliotheek from "../toolbibliotheek.js";
 import type * as users from "../users.js";
 
 /**
@@ -36,10 +38,12 @@ declare const fullApi: ApiFromModules<{
   comments: typeof comments;
   "lib/getUser": typeof lib_getUser;
   "lib/utils": typeof lib_utils;
+  promptbibliotheek: typeof promptbibliotheek;
   secties: typeof secties;
   seed: typeof seed;
   seedChannels: typeof seedChannels;
   threads: typeof threads;
+  toolbibliotheek: typeof toolbibliotheek;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

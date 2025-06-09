@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/lib/useCurrentUser";
 import { useConvexQuery, useConvexMutation } from "@/lib/useConvexFunction";
 import KanaalSidebar from "@/components/KanaalSidebar";
 import ThreadCard from "@/components/ThreadCard";
+import TopNavigation from "@/components/TopNavigation";
 import CloudinaryAvatarUpload from "@/components/CloudinaryAvatarUpload";
 import { loadCloudinaryScript } from "@/components/CloudinaryUpload";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -356,8 +357,10 @@ export default function ProfielPage() {
   };
 
   return (
-    <div className="flex h-screen">
-      <KanaalSidebar />
+    <div className="flex flex-col h-screen">
+      <TopNavigation />
+      <div className="flex flex-1 overflow-hidden">
+        <KanaalSidebar />
       
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto">
@@ -888,6 +891,7 @@ Tip: Gebruik Enter voor nieuwe alinea's!"
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 } 

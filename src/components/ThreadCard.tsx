@@ -185,7 +185,7 @@ export default function ThreadCard({
               <User className="w-4 h-4 text-gray-600" />
             </div>
             <span className="text-sm font-medium text-gray-900">
-              {thread.author?.naam || "Anoniem"}
+              {thread.author?.naam || "Systeem"}
             </span>
           </div>
           

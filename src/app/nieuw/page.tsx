@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import KanaalSidebar from "@/components/KanaalSidebar";
 import Editor from "@/components/Editor";
+import TopNavigation from "@/components/TopNavigation";
 import PollCreator from "@/components/PollCreator";
 import CloudinaryUploadThread from "@/components/CloudinaryUploadThread";
 import IntroduceerJezelfForm from "@/components/IntroduceerJezelfForm";
@@ -166,232 +167,235 @@ function NieuweThreadContent() {
 
   return (
     <OnboardingCheck>
-      <div className="flex h-screen">
-        <KanaalSidebar />
-        
-        <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto p-6">
-          <div className="mb-6">
-            <Link href={backLink}>
-              <Button variant="ghost" size="sm" className="mb-4">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {backText}
-              </Button>
-            </Link>
-            
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              {isIntroduceerChannel 
-                ? "Stel jezelf voor! 👋" 
-                : "Nieuwe thread aanmaken"
-              }
-            </h1>
-            <p className="text-muted-foreground">
-              {isIntroduceerChannel
-                ? "Vertel ons wie je bent - we zijn benieuwd naar je verhaal!"
-                : isChannelPreselected 
-                  ? `Start een nieuwe discussie in ${selectedChannelData?.naam}`
-                  : "Start een nieuwe discussie in de community"
-              }
-            </p>
-          </div>
-
-          {/* Special form for introduceer-jezelf channel */}
-          {isIntroduceerChannel ? (
-            <IntroduceerJezelfForm 
-              onSubmit={handleIntroduceerSubmit}
-              isSubmitting={isSubmitting}
-            />
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Kanaal selectie - alleen tonen als er geen kanaal is voorgeselecteerd */}
-            {!isChannelPreselected ? (
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Kanaal *
-                </label>
-                <select
-                  value={selectedChannel}
-                  onChange={(e) => setSelectedChannel(e.target.value)}
-                  className="w-full p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                >
-                  <option value="">Selecteer een kanaal</option>
-                  {channels?.filter(c => c.type === "discussie").map((channel) => (
-                    <option key={channel._id} value={channel._id}>
-                      {channel.naam}
-                    </option>
-                  ))}
-                </select>
-                {selectedChannelData && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {selectedChannelData.beschrijving}
-                  </p>
-                )}
-              </div>
-            ) : (
-              // Toon geselecteerd kanaal als readonly
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Kanaal
-                </label>
-                <div className="w-full p-3 border border-border rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium text-foreground">
-                        {selectedChannelData?.naam}
-                      </span>
-                      {selectedChannelData?.beschrijving && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {selectedChannelData.beschrijving}
-                        </p>
-                      )}
-                    </div>
-                    <Link href="/nieuw">
-                      <Button variant="ghost" size="sm" type="button">
-                        Wijzigen
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Thread Type Selection - only for voorstellen-uitbreiding */}
-            {isVoorstellenChannel && (
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Type *
-                </label>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setThreadType("text")}
-                    className={`flex-1 p-4 border rounded-lg transition-all ${
-                      threadType === "text"
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
-                      <span className="font-medium">Tekst</span>
-                    </div>
-                    <p className="text-xs mt-1 opacity-75">
-                      Gewone discussie met tekst
-                    </p>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setThreadType("poll")}
-                    className={`flex-1 p-4 border rounded-lg transition-all ${
-                      threadType === "poll"
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      <span className="font-medium">Poll</span>
-                    </div>
-                    <p className="text-xs mt-1 opacity-75">
-                      Laat mensen stemmen op opties
-                    </p>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Titel */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Titel *
-              </label>
-              <input
-                type="text"
-                value={titel}
-                onChange={(e) => setTitel(e.target.value)}
-                placeholder="Geef je thread een duidelijke titel..."
-                className="w-full p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-                maxLength={200}
-              />
-              <div className="text-xs text-muted-foreground mt-1">
-                {titel.length}/200 karakters
-              </div>
-            </div>
-
-            {/* Content based on thread type */}
-            {threadType === "text" ? (
-              /* Inhoud */
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Inhoud *
-                </label>
-                <Editor
-                  value={inhoud}
-                  onChange={setInhoud}
-                  placeholder="Beschrijf je vraag of discussiepunt in detail..."
-                  minHeight="300px"
-                />
-              </div>
-            ) : (
-              /* Poll Creator */
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Poll Configuratie *
-                </label>
-                <PollCreator onPollChange={setPollData} />
-              </div>
-            )}
-
-            {/* Afbeelding (optioneel) - alleen voor text threads */}
-            {threadType === "text" && (
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Afbeelding (optioneel)
-                </label>
-                <CloudinaryUploadThread
-                  onUpload={setAfbeelding}
-                  onRemove={() => setAfbeelding("")}
-                  currentImage={afbeelding}
-                  disabled={isSubmitting}
-                />
-              </div>
-            )}
-
-            {/* Submit */}
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                * Verplichte velden
-              </div>
-              
-              <div className="flex gap-3">
+      <div className="flex flex-col h-screen">
+        <TopNavigation />
+        <div className="flex flex-1 overflow-hidden">
+          <KanaalSidebar />
+          
+          <div className="flex-1 overflow-auto">
+            <div className="max-w-4xl mx-auto p-6">
+              <div className="mb-6">
                 <Link href={backLink}>
-                  <Button variant="outline" type="button">
-                    Annuleren
+                  <Button variant="ghost" size="sm" className="mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    {backText}
                   </Button>
                 </Link>
                 
-                <Button 
-                  type="submit" 
-                  disabled={!isValidForSubmit() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    "Wordt aangemaakt..."
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      {threadType === "poll" ? "Poll aanmaken" : "Thread aanmaken"}
-                    </>
-                  )}
-                </Button>
+                <h1 className="text-2xl font-bold text-foreground mb-2">
+                  {isIntroduceerChannel 
+                    ? "Stel jezelf voor! 👋" 
+                    : "Nieuwe thread aanmaken"
+                  }
+                </h1>
+                <p className="text-muted-foreground">
+                  {isIntroduceerChannel
+                    ? "Vertel ons wie je bent - we zijn benieuwd naar je verhaal!"
+                    : isChannelPreselected 
+                      ? `Start een nieuwe discussie in ${selectedChannelData?.naam}`
+                      : "Start een nieuwe discussie in de community"
+                  }
+                </p>
               </div>
+
+              {/* Special form for introduceer-jezelf channel */}
+              {isIntroduceerChannel ? (
+                <IntroduceerJezelfForm 
+                  onSubmit={handleIntroduceerSubmit}
+                  isSubmitting={isSubmitting}
+                />
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Kanaal selectie - alleen tonen als er geen kanaal is voorgeselecteerd */}
+                {!isChannelPreselected ? (
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Kanaal *
+                    </label>
+                    <select
+                      value={selectedChannel}
+                      onChange={(e) => setSelectedChannel(e.target.value)}
+                      className="w-full p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    >
+                      <option value="">Selecteer een kanaal</option>
+                      {channels?.filter(c => c.type === "discussie").map((channel) => (
+                        <option key={channel._id} value={channel._id}>
+                          {channel.naam}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedChannelData && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {selectedChannelData.beschrijving}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  // Toon geselecteerd kanaal als readonly
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Kanaal
+                    </label>
+                    <div className="w-full p-3 border border-border rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-foreground">
+                            {selectedChannelData?.naam}
+                          </span>
+                          {selectedChannelData?.beschrijving && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {selectedChannelData.beschrijving}
+                            </p>
+                          )}
+                        </div>
+                        <Link href="/nieuw">
+                          <Button variant="ghost" size="sm" type="button">
+                            Wijzigen
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Thread Type Selection - only for voorstellen-uitbreiding */}
+                {isVoorstellenChannel && (
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Type *
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setThreadType("text")}
+                        className={`flex-1 p-4 border rounded-lg transition-all ${
+                          threadType === "text"
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <MessageSquare className="w-5 h-5" />
+                          <span className="font-medium">Tekst</span>
+                        </div>
+                        <p className="text-xs mt-1 opacity-75">
+                          Gewone discussie met tekst
+                        </p>
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setThreadType("poll")}
+                        className={`flex-1 p-4 border rounded-lg transition-all ${
+                          threadType === "poll"
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <BarChart3 className="w-5 h-5" />
+                          <span className="font-medium">Poll</span>
+                        </div>
+                        <p className="text-xs mt-1 opacity-75">
+                          Laat mensen stemmen op opties
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Titel */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Titel *
+                  </label>
+                  <input
+                    type="text"
+                    value={titel}
+                    onChange={(e) => setTitel(e.target.value)}
+                    placeholder="Geef je thread een duidelijke titel..."
+                    className="w-full p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                    maxLength={200}
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {titel.length}/200 karakters
+                  </div>
+                </div>
+
+                {/* Content based on thread type */}
+                {threadType === "text" ? (
+                  /* Inhoud */
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Inhoud *
+                    </label>
+                    <Editor
+                      value={inhoud}
+                      onChange={setInhoud}
+                      placeholder="Beschrijf je vraag of discussiepunt in detail..."
+                      minHeight="300px"
+                    />
+                  </div>
+                ) : (
+                  /* Poll Creator */
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Poll Configuratie *
+                    </label>
+                    <PollCreator onPollChange={setPollData} />
+                  </div>
+                )}
+
+                {/* Afbeelding (optioneel) - alleen voor text threads */}
+                {threadType === "text" && (
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Afbeelding (optioneel)
+                    </label>
+                    <CloudinaryUploadThread
+                      onUpload={setAfbeelding}
+                      onRemove={() => setAfbeelding("")}
+                      currentImage={afbeelding}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                )}
+
+                {/* Submit */}
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    * Verplichte velden
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Link href={backLink}>
+                      <Button variant="outline" type="button">
+                        Annuleren
+                      </Button>
+                    </Link>
+                    
+                    <Button 
+                      type="submit" 
+                      disabled={!isValidForSubmit() || isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        "Wordt aangemaakt..."
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          {threadType === "poll" ? "Poll aanmaken" : "Thread aanmaken"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </form>
+              )}
             </div>
-          </form>
-          )}
+          </div>
         </div>
-      </div>
       </div>
     </OnboardingCheck>
   );

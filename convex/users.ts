@@ -50,6 +50,7 @@ export const createUser = mutation({
     organisatie: v.string(),
     bio: v.string(),
     tags: v.array(v.string()),
+    linkedinUrl: v.optional(v.string()),
     role: v.optional(v.union(v.literal("admin"), v.literal("member"), v.literal("moderator"))),
   },
   handler: async (ctx, args) => {
@@ -467,6 +468,102 @@ export const deleteSelfProfile = mutation({
     await ctx.db.delete(user._id);
     
     return { success: true, clerkId: user.clerkId };
+  },
+});
+
+// Onboarding functions
+export const getOnboardingProgress = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) return null;
+
+    return {
+      completed: user.onboardingCompleted || false,
+      steps: user.onboardingSteps || {
+        shared: false,
+        introduced: false,
+        prompt: false,
+      },
+    };
+  },
+});
+
+export const updateOnboardingStep = mutation({
+  args: {
+    step: v.union(v.literal("shared"), v.literal("introduced"), v.literal("prompt")),
+    completed: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Niet ingelogd");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("Gebruiker niet gevonden");
+    }
+
+    const currentSteps = user.onboardingSteps || {
+      shared: false,
+      introduced: false,
+      prompt: false,
+    };
+
+    const updatedSteps = {
+      ...currentSteps,
+      [args.step]: args.completed,
+    };
+
+    // Check if all steps are completed
+    const allCompleted = Object.values(updatedSteps).every(Boolean);
+
+    await ctx.db.patch(user._id, {
+      onboardingSteps: updatedSteps,
+      onboardingCompleted: allCompleted,
+    });
+
+    return {
+      steps: updatedSteps,
+      completed: allCompleted,
+    };
+  },
+});
+
+export const completeOnboarding = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Niet ingelogd");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("Gebruiker niet gevonden");
+    }
+
+    await ctx.db.patch(user._id, {
+      onboardingCompleted: true,
+    });
+
+    return { success: true };
   },
 });
 

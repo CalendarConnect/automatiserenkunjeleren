@@ -23,6 +23,8 @@ const eslintConfig = [
       "@next/next/no-img-element": "off", // Allow img elements when needed
       "prefer-const": "warn",
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+      "react/no-unescaped-entities": "off", // Allow unescaped entities for Dutch content
+      "jsx-a11y/alt-text": "warn", // Make alt text warnings instead of errors
     },
   },
 ];

@@ -12,6 +12,7 @@ const isProtectedRoute = createRouteMatcher([
 ])
 
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
+const isAuthRoute = createRouteMatcher(['/sign-in', '/sign-up'])
 
 export default clerkMiddleware(async (auth, req) => {
   try {
@@ -21,11 +22,15 @@ export default clerkMiddleware(async (auth, req) => {
     if (isProtectedRoute(req)) {
       await auth.protect()
       
-      // If user is authenticated but not on onboarding page, check if they need onboarding
-      if (userId && !isOnboardingRoute(req)) {
-        // For now, we'll let the onboarding page itself handle the redirect logic
-        // since we need to check the Convex user data to see if profile is complete
-      }
+      // If user is authenticated and trying to access protected routes,
+      // redirect to onboarding if they haven't completed it
+      // Note: We'll let the client-side components handle the detailed onboarding check
+      // since we need Convex data to determine if profile is complete
+    }
+    
+    // If user is authenticated and tries to access auth routes, redirect to community
+    if (isAuthRoute(req) && userId) {
+      return NextResponse.redirect(new URL('/community', req.url))
     }
     
     return NextResponse.next()

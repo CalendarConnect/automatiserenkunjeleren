@@ -122,7 +122,7 @@ export default function ThreadView({ threadId, currentUserId }: ThreadViewProps)
           <Avatar className="w-12 h-12">
             <AvatarImage src={thread.author?.avatarUrl} />
             <AvatarFallback>
-              {thread.author ? getInitials(thread.author.naam) : "?"}
+              {thread.author ? getInitials(thread.author.naam) : "SYS"}
             </AvatarFallback>
           </Avatar>
 
@@ -144,7 +144,7 @@ export default function ThreadView({ threadId, currentUserId }: ThreadViewProps)
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
               <span>
-                {thread.author?.naam} • {thread.author?.functie}
+                {thread.author?.naam || "Systeem"} • {thread.author?.functie || "Automatisch gegenereerd"}
               </span>
               <span>
                 {formatDistanceToNow(new Date(thread.aangemaaktOp), {
@@ -283,14 +283,14 @@ export default function ThreadView({ threadId, currentUserId }: ThreadViewProps)
               <Avatar className="w-8 h-8">
                 <AvatarImage src={comment.author?.avatarUrl} />
                 <AvatarFallback>
-                  {comment.author ? getInitials(comment.author.naam) : "?"}
+                  {comment.author ? getInitials(comment.author.naam) : "SYS"}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-foreground">
-                    {comment.author?.naam}
+                    {comment.author?.naam || "Systeem"}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {comment.author?.functie}

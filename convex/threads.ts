@@ -125,6 +125,39 @@ export const getThreadBySlugAndNumber = query({
   },
 });
 
+export const getThreadByChannelAndNumber = query({
+  args: { 
+    channelSlug: v.string(),
+    threadNumber: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // First find the channel by slug
+    const channel = await ctx.db
+      .query("channels")
+      .withIndex("by_slug", (q) => q.eq("slug", args.channelSlug))
+      .first();
+    
+    if (!channel) return null;
+
+    // Then find the thread by channel and thread number
+    const thread = await ctx.db
+      .query("threads")
+      .withIndex("by_channel", (q) => q.eq("kanaalId", channel._id))
+      .filter((q) => q.eq(q.field("threadNumber"), args.threadNumber))
+      .first();
+    
+    if (!thread) return null;
+
+    const author = await ctx.db.get(thread.auteurId);
+    
+    return {
+      ...thread,
+      author,
+      channel,
+    };
+  },
+});
+
 export const upvoteThread = mutation({
   args: {
     threadId: v.id("threads"),
