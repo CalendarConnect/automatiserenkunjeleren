@@ -8,7 +8,7 @@ import ConditionalConvexProvider from "@/components/ConditionalConvexProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Keyspace - Automatiseren Kun Je Leren",
+  title: "Automatiseren kun je leren",
   description: "Community platform voor AI-implementatie discussies - Automatiseren kun je leren",
   icons: {
     icon: [
