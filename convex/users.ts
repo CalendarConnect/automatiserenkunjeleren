@@ -14,29 +14,43 @@ export const createOrSyncUser = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-      .unique();
+    try {
+      // Check if user already exists
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+        .unique();
 
-    if (existing) return existing;
+      if (existing) {
+        console.log("User already exists:", existing._id);
+        return existing;
+      }
 
-    // Check if this is the first user (admin)
-    const userCount = await ctx.db.query("users").collect();
-    const role = userCount.length === 0 ? "admin" : "member";
+      // Check if this is the first user (admin)
+      const userCount = await ctx.db.query("users").collect();
+      const role = userCount.length === 0 ? "admin" : "member";
 
-    return await ctx.db.insert("users", {
-      clerkId: args.clerkId,
-      email: args.email,
-      naam: args.naam || "Nieuwe gebruiker",
-      avatarUrl: args.avatarUrl,
-      functie: args.functie || "",
-      organisatie: args.organisatie || "",
-      bio: args.bio || "",
-      tags: args.tags || [],
-      role,
-      aangemaaktOp: Date.now(),
-    });
+      console.log("Creating new user with role:", role);
+
+      const newUser = await ctx.db.insert("users", {
+        clerkId: args.clerkId,
+        email: args.email,
+        naam: args.naam || "Nieuwe gebruiker",
+        avatarUrl: args.avatarUrl,
+        functie: args.functie || "",
+        organisatie: args.organisatie || "",
+        bio: args.bio || "",
+        tags: args.tags || [],
+        role,
+        aangemaaktOp: Date.now(),
+      });
+
+      console.log("Successfully created user:", newUser);
+      return await ctx.db.get(newUser);
+    } catch (error) {
+      console.error("Error in createOrSyncUser:", error);
+      throw new Error(`Failed to create or sync user: ${error}`);
+    }
   },
 });
 

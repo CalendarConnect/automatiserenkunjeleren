@@ -5,6 +5,8 @@ import { useUser } from "@clerk/nextjs";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { useConvexMutation } from "@/lib/useConvexFunction";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +42,7 @@ function OnboardingContent() {
   
   const updateUser = useConvexMutation("users:updateUser");
   const createUser = useConvexMutation("users:createUser");
+  const createOrSyncUser = useMutation(api.users.createOrSyncUser);
   
   const [profileData, setProfileData] = useState({
     naam: "",
@@ -131,8 +134,13 @@ function OnboardingContent() {
     
     setIsSubmitting(true);
     try {
+      console.log("🔄 Onboarding: Starting profile save for user:", clerkUser.id);
+      console.log("🔄 Onboarding: ConvexUser exists:", !!convexUser);
+      console.log("🔄 Onboarding: Profile data:", profileData);
+      
       if (convexUser) {
         // Update existing user
+        console.log("🔄 Onboarding: Updating existing user");
         await updateUser({
           userId: convexUser._id,
           naam: profileData.naam,
@@ -143,25 +151,42 @@ function OnboardingContent() {
           avatarUrl: profileData.avatarUrl,
           linkedinUrl: profileData.linkedinUrl,
         });
+        console.log("✅ Onboarding: User updated successfully");
       } else {
-        // Create new user
-        await createUser({
-          clerkId: clerkUser.id,
-          email: clerkUser.emailAddresses[0]?.emailAddress || "",
-          naam: profileData.naam,
-          functie: profileData.functie,
-          organisatie: profileData.organisatie,
-          bio: profileData.bio,
-          tags: profileData.tags,
-          avatarUrl: profileData.avatarUrl,
-          linkedinUrl: profileData.linkedinUrl,
-        });
+        // Create new user - but first try createOrSyncUser as fallback
+        console.log("🔄 Onboarding: Creating new user");
+        try {
+          await createUser({
+            clerkId: clerkUser.id,
+            email: clerkUser.emailAddresses[0]?.emailAddress || "",
+            naam: profileData.naam,
+            functie: profileData.functie,
+            organisatie: profileData.organisatie,
+            bio: profileData.bio,
+            tags: profileData.tags,
+            avatarUrl: profileData.avatarUrl,
+            linkedinUrl: profileData.linkedinUrl,
+          });
+          console.log("✅ Onboarding: User created successfully");
+        } catch (createError) {
+          console.error("❌ Onboarding: Error creating user, trying sync fallback:", createError);
+          // If createUser fails, try the sync method as fallback
+          await createOrSyncUser({
+            clerkId: clerkUser.id,
+            email: clerkUser.emailAddresses[0]?.emailAddress || "",
+            naam: profileData.naam,
+            avatarUrl: profileData.avatarUrl,
+          });
+          console.log("✅ Onboarding: User synced as fallback");
+        }
       }
       
       // Redirect to community page
+      console.log("🔄 Onboarding: Redirecting to community");
       router.push("/community");
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.error("❌ Onboarding: Error saving profile:", error);
+      alert(`Er is een fout opgetreden bij het opslaan van je profiel: ${error}`);
     } finally {
       setIsSubmitting(false);
     }

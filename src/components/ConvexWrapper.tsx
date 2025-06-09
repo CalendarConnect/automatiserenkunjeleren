@@ -5,6 +5,7 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useAuth } from "@clerk/nextjs";
 import { ViewModeProvider } from "@/contexts/ViewModeContext";
+import UserSync from "./UserSync";
 
 interface ConvexWrapperProps {
   children: ReactNode;
@@ -22,6 +23,7 @@ export default function ConvexWrapper({ children }: ConvexWrapperProps) {
   return (
     <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
       <ViewModeProvider>
+        <UserSync />
         {children}
       </ViewModeProvider>
     </ConvexProviderWithClerk>
