@@ -1,16 +1,48 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+// Helper function to extract user IDs from mention text
+function extractMentions(content: string, allUsers: any[]): Id<"users">[] {
+  const mentionRegex = /@(\w+(?:\s+\w+)*)/g;
+  const mentions: Id<"users">[] = [];
+  let match;
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    const mentionedName = match[1].trim();
+    const user = allUsers.find(u => 
+      u.naam.toLowerCase() === mentionedName.toLowerCase()
+    );
+    if (user) {
+      mentions.push(user._id);
+    }
+  }
+
+  return [...new Set(mentions)]; // Remove duplicates
+}
 
 export const postComment = mutation({
   args: {
     threadId: v.id("threads"),
     auteurId: v.id("users"),
     inhoud: v.string(),
+    mentions: v.optional(v.array(v.id("users"))), // Array of mentioned user IDs
   },
   handler: async (ctx, args) => {
+    // If no mentions provided, try to extract from content
+    let mentions = args.mentions || [];
+    
+    if (!args.mentions && args.inhoud.includes('@')) {
+      const allUsers = await ctx.db.query("users").collect();
+      mentions = extractMentions(args.inhoud, allUsers);
+    }
+
     return await ctx.db.insert("comments", {
-      ...args,
+      threadId: args.threadId,
+      auteurId: args.auteurId,
+      inhoud: args.inhoud,
       likes: [],
+      mentions: mentions.length > 0 ? mentions : undefined,
       aangemaaktOp: Date.now(),
     });
   },
@@ -25,13 +57,25 @@ export const getCommentsByThread = query({
       .order("asc")
       .collect();
 
-    // Get author info for each comment
+    // Get author info and mentioned users for each comment
     const commentsWithAuthors = await Promise.all(
       comments.map(async (comment) => {
         const author = await ctx.db.get(comment.auteurId);
+        
+        // Get mentioned users if any
+        let mentionedUsers: any[] = [];
+        if (comment.mentions && comment.mentions.length > 0) {
+          mentionedUsers = await Promise.all(
+            comment.mentions.map(async (userId: any) => {
+              return await ctx.db.get(userId);
+            })
+          );
+        }
+
         return {
           ...comment,
           author,
+          mentionedUsers: mentionedUsers.filter(Boolean), // Filter out any null results
         };
       })
     );

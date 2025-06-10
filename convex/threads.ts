@@ -1,6 +1,27 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { generateSlug } from "./lib/utils";
+import { Id } from "./_generated/dataModel";
+import { requireAdmin } from "./lib/getUser";
+
+// Helper function to extract user IDs from mention text
+function extractMentions(content: string, allUsers: any[]): Id<"users">[] {
+  const mentionRegex = /@(\w+(?:\s+\w+)*)/g;
+  const mentions: Id<"users">[] = [];
+  let match;
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    const mentionedName = match[1].trim();
+    const user = allUsers.find(u => 
+      u.naam.toLowerCase() === mentionedName.toLowerCase()
+    );
+    if (user) {
+      mentions.push(user._id);
+    }
+  }
+
+  return [...new Set(mentions)]; // Remove duplicates
+}
 
 export const createThread = mutation({
   args: {
@@ -10,18 +31,51 @@ export const createThread = mutation({
     auteurId: v.id("users"),
     afbeelding: v.optional(v.string()),
     type: v.optional(v.union(v.literal("text"), v.literal("poll"))),
+    mentions: v.optional(v.array(v.id("users"))), // Array of mentioned user IDs
     // Poll specific fields
     pollVraag: v.optional(v.string()),
     pollOpties: v.optional(v.array(v.string())),
     multipleChoice: v.optional(v.boolean()),
+    // Admin-only attachments
+    attachments: v.optional(v.object({
+      videos: v.optional(v.array(v.object({
+        type: v.union(v.literal("youtube"), v.literal("mp4")),
+        url: v.string(),
+        title: v.optional(v.string()),
+        thumbnail: v.optional(v.string()),
+      }))),
+      downloads: v.optional(v.array(v.object({
+        filename: v.string(),
+        url: v.string(),
+        fileType: v.string(),
+        fileSize: v.optional(v.number()),
+        uploadedAt: v.number(),
+      }))),
+    })),
   },
   handler: async (ctx, args) => {
+    // If attachments are provided, verify the user is an admin
+    if (args.attachments && (args.attachments.videos?.length || args.attachments.downloads?.length)) {
+      const user = await ctx.db.get(args.auteurId);
+      if (!user || user.role !== "admin") {
+        throw new Error("Alleen admins kunnen bestanden bijvoegen aan threads");
+      }
+    }
+
     // Generate slug from title
     const slug = generateSlug(args.titel);
     
     // Get next thread number
     const allThreads = await ctx.db.query("threads").collect();
     const threadNumber = allThreads.length + 1;
+    
+    // If no mentions provided, try to extract from content
+    let mentions = args.mentions || [];
+    
+    if (!args.mentions && args.inhoud && args.inhoud.includes('@')) {
+      const allUsers = await ctx.db.query("users").collect();
+      mentions = extractMentions(args.inhoud, allUsers);
+    }
     
     const threadId = await ctx.db.insert("threads", {
       kanaalId: args.kanaalId,
@@ -32,6 +86,8 @@ export const createThread = mutation({
       auteurId: args.auteurId,
       afbeelding: args.afbeelding,
       type: args.type || "text",
+      mentions: mentions.length > 0 ? mentions : undefined,
+      attachments: args.attachments,
       upvotes: [],
       sticky: false,
       aangemaaktOp: Date.now(),
@@ -92,10 +148,21 @@ export const getThreadById = query({
     const author = await ctx.db.get(thread.auteurId);
     const channel = await ctx.db.get(thread.kanaalId);
     
+    // Get mentioned users if any
+    let mentionedUsers: any[] = [];
+    if (thread.mentions && thread.mentions.length > 0) {
+      mentionedUsers = await Promise.all(
+        thread.mentions.map(async (userId: any) => {
+          return await ctx.db.get(userId);
+        })
+      );
+    }
+    
     return {
       ...thread,
       author,
       channel,
+      mentionedUsers: mentionedUsers.filter(Boolean), // Filter out any null results
     };
   },
 });
@@ -546,6 +613,34 @@ export const getRecentThreads = query({
     );
 
     return threadsWithAuthors;
+  },
+});
+
+export const getWeeklyThreadGrowth = query({
+  args: {},
+  handler: async (ctx) => {
+    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    
+    const recentThreads = await ctx.db
+      .query("threads")
+      .filter((q) => q.gte(q.field("aangemaaktOp"), oneWeekAgo))
+      .collect();
+    
+    return recentThreads.length;
+  },
+});
+
+export const getDailyThreadGrowth = query({
+  args: {},
+  handler: async (ctx) => {
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    
+    const recentThreads = await ctx.db
+      .query("threads")
+      .filter((q) => q.gte(q.field("aangemaaktOp"), oneDayAgo))
+      .collect();
+    
+    return recentThreads.length;
   },
 });
 

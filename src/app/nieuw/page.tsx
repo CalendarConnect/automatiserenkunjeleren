@@ -16,9 +16,12 @@ import Link from "next/link";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { createThreadUrl } from "../../../convex/lib/utils";
 import OnboardingCheck from "@/components/OnboardingCheck";
+import AdminFileAttachments from "@/components/AdminFileAttachments";
+import { useViewAwareAdmin } from "@/lib/useViewAwareRole";
 
 function NieuweThreadContent() {
   const { user: currentUser, isLoading: userLoading } = useCurrentUser();
+  const { isAdmin } = useViewAwareAdmin();
   const router = useRouter();
   const searchParams = useSearchParams();
   const kanaalParam = searchParams.get('kanaal');
@@ -28,6 +31,7 @@ function NieuweThreadContent() {
   const [inhoud, setInhoud] = useState("");
   const [afbeelding, setAfbeelding] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attachments, setAttachments] = useState<any>(undefined);
   
   // Poll/Text type selection
   const [threadType, setThreadType] = useState<"text" | "poll">("text");
@@ -75,6 +79,7 @@ function NieuweThreadContent() {
         auteurId: currentUser?._id as any,
         afbeelding: afbeelding || undefined,
         type: threadType,
+        attachments: attachments,
         // Poll specific data
         pollVraag: threadType === "poll" ? pollData?.vraag : undefined,
         pollOpties: threadType === "poll" ? pollData?.opties : undefined,
@@ -361,6 +366,14 @@ function NieuweThreadContent() {
                       disabled={isSubmitting}
                     />
                   </div>
+                )}
+
+                {/* Admin File Attachments - only show for admins */}
+                {isAdmin && threadType === "text" && (
+                  <AdminFileAttachments
+                    onAttachmentsChange={setAttachments}
+                    disabled={isSubmitting}
+                  />
                 )}
 
                 {/* Submit */}

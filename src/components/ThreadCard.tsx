@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
-import { ArrowUp, MessageCircle, Hash, FileText, BookOpen, Clock, User, BarChart3 } from "lucide-react";
+import { ArrowUp, MessageCircle, Hash, FileText, BookOpen, Clock, User, BarChart3, Video, Download, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { createThreadUrl } from "../../convex/lib/utils";
@@ -27,6 +28,21 @@ interface ThreadCardProps {
     aangemaaktOp: number;
     afbeelding?: string;
     type?: "text" | "poll";
+    attachments?: {
+      videos?: Array<{
+        type: "youtube" | "mp4";
+        url: string;
+        title?: string;
+        thumbnail?: string;
+      }>;
+      downloads?: Array<{
+        filename: string;
+        url: string;
+        fileType: string;
+        fileSize?: number;
+        uploadedAt: number;
+      }>;
+    };
     author?: {
       naam: string;
       avatarUrl?: string;
@@ -70,6 +86,15 @@ export default function ThreadCard({
   
   const hasUpvoted = currentUserId ? thread.upvotes.includes(currentUserId) : false;
   const isVoorstellenChannel = (thread.kanaal?.slug || thread.channel?.slug) === "voorstellen-uitbreiding";
+  
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   // Generate thread URL
   const threadUrl = thread.slug && thread.threadNumber 
@@ -181,9 +206,12 @@ export default function ThreadCard({
         <div className="flex items-center gap-3 flex-wrap">
           {/* Author */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="w-4 h-4 text-gray-600" />
-            </div>
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={thread.author?.avatarUrl} />
+              <AvatarFallback className="text-xs">
+                {thread.author?.naam ? getInitials(thread.author.naam) : "SYS"}
+              </AvatarFallback>
+            </Avatar>
             <span className="text-sm font-medium text-gray-900">
               {thread.author?.naam || "Systeem"}
             </span>
@@ -293,14 +321,21 @@ export default function ThreadCard({
             {thread.titel}
           </h3>
           
-          {/* Thread afbeelding */}
-          {thread.afbeelding && (
-            <div className="rounded-lg overflow-hidden border">
-              <img
-                src={thread.afbeelding}
-                alt={thread.titel}
-                className="w-full h-48 object-cover group-hover:scale-[1.02] transition-transform duration-300"
-              />
+          {/* Attachment indicators */}
+          {thread.attachments && (thread.attachments.videos?.length || thread.attachments.downloads?.length) && (
+            <div className="flex items-center gap-2">
+              {thread.attachments.videos && thread.attachments.videos.length > 0 && (
+                <div className="flex items-center gap-1 text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                  <Video className="w-3 h-3" />
+                  <span>{thread.attachments.videos.length} video{thread.attachments.videos.length !== 1 ? "'s" : ""}</span>
+                </div>
+              )}
+              {thread.attachments.downloads && thread.attachments.downloads.length > 0 && (
+                <div className="flex items-center gap-1 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                  <Download className="w-3 h-3" />
+                  <span>{thread.attachments.downloads.length} bestand{thread.attachments.downloads.length !== 1 ? "en" : ""}</span>
+                </div>
+              )}
             </div>
           )}
           

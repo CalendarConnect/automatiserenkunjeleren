@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getUser, requireAdmin, getCurrentUserOrNull } from "./lib/getUser";
+import { getUser, requireAdmin, requireModeratorOrAdmin, getCurrentUserOrNull } from "./lib/getUser";
 
 export const createOrSyncUser = mutation({
   args: {
@@ -185,6 +185,27 @@ export const searchUsersByTags = query({
   },
 });
 
+export const searchUsersForMention = query({
+  args: { searchTerm: v.string() },
+  handler: async (ctx, args) => {
+    const users = await ctx.db.query("users").collect();
+    
+    if (!args.searchTerm) {
+      return users.slice(0, 10); // Return first 10 users if no search term
+    }
+    
+    const searchLower = args.searchTerm.toLowerCase();
+    
+    return users
+      .filter(user => 
+        user.naam.toLowerCase().includes(searchLower) ||
+        user.functie.toLowerCase().includes(searchLower) ||
+        user.organisatie.toLowerCase().includes(searchLower)
+      )
+      .slice(0, 10); // Limit to 10 results
+  },
+});
+
 export const getAllUsers = query({
   args: {},
   handler: async (ctx) => {
@@ -234,7 +255,12 @@ export const updateUserRole = mutation({
     role: v.union(v.literal("admin"), v.literal("member"), v.literal("moderator")),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    const currentUser = await requireModeratorOrAdmin(ctx);
+    
+    // Only admins can make other users admin
+    if (args.role === "admin" && currentUser.role !== "admin") {
+      throw new Error("Alleen administrators kunnen andere gebruikers tot admin maken");
+    }
     
     return await ctx.db.patch(args.userId, {
       role: args.role,
@@ -393,9 +419,9 @@ export const getAllUsersWithRoles = query({
   handler: async (ctx) => {
     // Try to get current user, if it fails, still allow if we can get users
     try {
-      await requireAdmin(ctx);
+      await requireModeratorOrAdmin(ctx);
     } catch (error) {
-      // If auth fails, check if we can at least verify the user exists and is admin
+      // If auth fails, check if we can at least verify the user exists and is admin/moderator
       const identity = await ctx.auth.getUserIdentity();
       if (!identity) {
         // As a fallback, just return users - the frontend will handle admin checks
@@ -578,6 +604,34 @@ export const completeOnboarding = mutation({
     });
 
     return { success: true };
+  },
+});
+
+export const getWeeklyUserGrowth = query({
+  args: {},
+  handler: async (ctx) => {
+    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    
+    const recentUsers = await ctx.db
+      .query("users")
+      .filter((q) => q.gte(q.field("aangemaaktOp"), oneWeekAgo))
+      .collect();
+    
+    return recentUsers.length;
+  },
+});
+
+export const getDailyUserGrowth = query({
+  args: {},
+  handler: async (ctx) => {
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    
+    const recentUsers = await ctx.db
+      .query("users")
+      .filter((q) => q.gte(q.field("aangemaaktOp"), oneDayAgo))
+      .collect();
+    
+    return recentUsers.length;
   },
 });
 

@@ -335,6 +335,10 @@ function CommunityContent() {
   const users = useQuery(api.users.getAllUsers);
   const allThreads = useQuery(api.threads.getAllThreads);
   const recentThreads = useQuery(api.threads.getRecentThreads, { limit: 6 });
+  
+  // Growth statistics
+  const weeklyUserGrowth = useQuery(api.users.getWeeklyUserGrowth);
+  const dailyThreadGrowth = useQuery(api.threads.getDailyThreadGrowth);
 
   // Extract first name from user's name
   const getFirstName = (fullName: string) => {
@@ -356,6 +360,13 @@ function CommunityContent() {
     return acc;
   }, {}) || {};
 
+  // Helper function to format growth text
+  const formatGrowthText = (count: number, period: string) => {
+    if (count === 0) return `0 ${period}`;
+    if (count === 1) return `+1 ${period}`;
+    return `+${count} ${period}`;
+  };
+
   const stats = [
     {
       label: "Community Members",
@@ -364,8 +375,8 @@ function CommunityContent() {
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-50",
       textColor: "text-blue-600",
-      change: "+12 deze week",
-      changeColor: "text-green-600"
+      change: formatGrowthText(weeklyUserGrowth || 0, "deze week"),
+      changeColor: weeklyUserGrowth && weeklyUserGrowth > 0 ? "text-green-600" : "text-gray-500"
     },
     {
       label: "Actieve Discussies",
@@ -374,8 +385,8 @@ function CommunityContent() {
       color: "from-green-500 to-green-600",
       bgColor: "bg-green-50",
       textColor: "text-green-600",
-      change: "+8 vandaag",
-      changeColor: "text-green-600"
+      change: formatGrowthText(dailyThreadGrowth || 0, "vandaag"),
+      changeColor: dailyThreadGrowth && dailyThreadGrowth > 0 ? "text-green-600" : "text-gray-500"
     },
     {
       label: "Kanalen",

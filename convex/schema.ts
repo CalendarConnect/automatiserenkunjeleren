@@ -66,6 +66,23 @@ export default defineSchema({
     sticky: v.boolean(),
     afbeelding: v.optional(v.string()), // Thread afbeelding URL
     type: v.optional(v.union(v.literal("text"), v.literal("poll"))), // Thread type
+    mentions: v.optional(v.array(v.id("users"))), // Array of mentioned user IDs
+    // Admin-only file attachments
+    attachments: v.optional(v.object({
+      videos: v.optional(v.array(v.object({
+        type: v.union(v.literal("youtube"), v.literal("mp4")),
+        url: v.string(),
+        title: v.optional(v.string()),
+        thumbnail: v.optional(v.string()),
+      }))),
+      downloads: v.optional(v.array(v.object({
+        filename: v.string(),
+        url: v.string(),
+        fileType: v.string(), // 'json', 'docx', 'pdf', etc.
+        fileSize: v.optional(v.number()), // in bytes
+        uploadedAt: v.number(),
+      }))),
+    })),
     aangemaaktOp: v.number(),
   })
     .index("by_channel", ["kanaalId"])
@@ -74,6 +91,7 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_slug", ["slug"])
     .index("by_thread_number", ["threadNumber"])
+    .index("by_mentioned_user", ["mentions"])
     .searchIndex("search_threads", {
       searchField: "titel",
       filterFields: ["kanaalId"]
@@ -103,9 +121,11 @@ export default defineSchema({
     auteurId: v.id("users"),
     inhoud: v.string(),
     likes: v.array(v.id("users")),
+    mentions: v.optional(v.array(v.id("users"))), // Array of mentioned user IDs
     aangemaaktOp: v.number(),
   })
     .index("by_thread", ["threadId"])
     .index("by_author", ["auteurId"])
-    .index("by_created_at", ["aangemaaktOp"]),
+    .index("by_created_at", ["aangemaaktOp"])
+    .index("by_mentioned_user", ["mentions"]),
 }); 

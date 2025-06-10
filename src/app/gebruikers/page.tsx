@@ -7,9 +7,9 @@ import KanaalSidebar from "@/components/KanaalSidebar";
 import TopNavigation from "@/components/TopNavigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Users, Shield, MoreHorizontal, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Filter, Users, Shield, MoreHorizontal, Trash2, AlertTriangle, ShieldCheck, ShieldOff, Crown } from "lucide-react";
 import Link from "next/link";
-import { useViewAwareAdmin } from "@/lib/useViewAwareRole";
+import { useViewAwareAdmin, useViewAwareModerator } from "@/lib/useViewAwareRole";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,10 @@ import {
 } from "@/components/ui/dialog";
 
 export default function GebruikersPage() {
-  const { isAdmin, isLoading } = useViewAwareAdmin();
+  const { isAdmin, isLoading: adminLoading } = useViewAwareAdmin();
+  const { isModerator, isLoading: moderatorLoading } = useViewAwareModerator();
+  const isLoading = adminLoading || moderatorLoading;
+  const canManageUsers = isAdmin || isModerator;
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -30,6 +33,7 @@ export default function GebruikersPage() {
   
   const users = useQuery(api.users.getAllUsers);
   const deleteUser = useMutation(api.users.deleteUser);
+  const updateUserRole = useMutation(api.users.updateUserRole);
 
   const getInitials = (name: string) => {
     return name
@@ -124,8 +128,27 @@ export default function GebruikersPage() {
     setShowAdminMenu(null);
   };
 
-  // Redirect non-admins
-  if (!isLoading && !isAdmin) {
+  const handleUpdateUserRole = async (userId: string, newRole: "admin" | "member" | "moderator", event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setShowAdminMenu(null);
+    
+    const roleText = newRole === "moderator" ? "moderator" : newRole === "admin" ? "admin" : "gewone gebruiker";
+    
+    if (!confirm(`Weet je zeker dat je deze gebruiker de rol '${roleText}' wilt geven?`)) {
+      return;
+    }
+    
+    try {
+      await updateUserRole({ userId: userId as any, role: newRole });
+    } catch (error) {
+      console.error("Fout bij wijzigen rol:", error);
+      alert("Fout bij wijzigen rol: " + (error as Error).message);
+    }
+  };
+
+  // Redirect non-admins and non-moderators
+  if (!isLoading && !canManageUsers) {
     return (
       <div className="flex flex-col h-screen">
         <TopNavigation />
@@ -138,7 +161,7 @@ export default function GebruikersPage() {
                 Toegang geweigerd
               </h3>
               <p className="text-muted-foreground mb-4">
-                Deze pagina is alleen toegankelijk voor administrators.
+                Deze pagina is alleen toegankelijk voor administrators en moderators.
               </p>
               <Link href="/kanalen">
                 <Button>
@@ -244,8 +267,8 @@ export default function GebruikersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredUsers.map((user) => (
                 <div key={user._id} className="relative group">
-                  {/* Admin menu button */}
-                  {isAdmin && (
+                  {/* Admin/Moderator menu button */}
+                  {canManageUsers && (
                     <div className="absolute top-2 right-2 z-10">
                       <Button
                         variant="ghost"
@@ -270,14 +293,60 @@ export default function GebruikersPage() {
                           />
                           
                           {/* Menu */}
-                          <div className="absolute right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]">
-                            <button
-                              onClick={(e) => openDeleteDialog(user, e)}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Verwijder gebruiker
-                            </button>
+                          <div className="absolute right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[180px]">
+                            {/* Admin options - only for admins */}
+                            {isAdmin && user.role !== "admin" && (
+                              <button
+                                onClick={(e) => handleUpdateUserRole(user._id, "admin", e)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-yellow-50 text-yellow-600 flex items-center gap-2"
+                              >
+                                <Crown className="w-4 h-4" />
+                                Admin maken
+                              </button>
+                            )}
+                            
+                            {/* Moderator options */}
+                            {user.role !== "moderator" && user.role !== "admin" && (
+                              <button
+                                onClick={(e) => handleUpdateUserRole(user._id, "moderator", e)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                              >
+                                <ShieldCheck className="w-4 h-4" />
+                                Moderator maken
+                              </button>
+                            )}
+                            {user.role === "moderator" && (
+                              <button
+                                onClick={(e) => handleUpdateUserRole(user._id, "member", e)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 text-gray-600 flex items-center gap-2"
+                              >
+                                <ShieldOff className="w-4 h-4" />
+                                Moderator verwijderen
+                              </button>
+                            )}
+                            {user.role === "admin" && isAdmin && (
+                              <button
+                                onClick={(e) => handleUpdateUserRole(user._id, "member", e)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 text-gray-600 flex items-center gap-2"
+                              >
+                                <Crown className="w-4 h-4" />
+                                Admin verwijderen
+                              </button>
+                            )}
+                            
+                            {/* Divider - only show if there's a delete option */}
+                            {isAdmin && <div className="border-t border-gray-200 my-1" />}
+                            
+                            {/* Delete option - only for admins */}
+                            {isAdmin && (
+                              <button
+                                onClick={(e) => openDeleteDialog(user, e)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Verwijder gebruiker
+                              </button>
+                            )}
                           </div>
                         </>
                       )}
@@ -295,9 +364,20 @@ export default function GebruikersPage() {
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground truncate">
-                            {user.naam}
-                          </h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground truncate">
+                              {user.naam}
+                            </h3>
+                            {user.role && user.role !== "member" && (
+                              <span className={`px-1.5 py-0.5 text-xs rounded-md font-medium ${
+                                user.role === "admin" ? "bg-yellow-100 text-yellow-800" :
+                                user.role === "moderator" ? "bg-blue-100 text-blue-800" :
+                                "bg-gray-100 text-gray-800"
+                              }`}>
+                                {user.role === "admin" ? "Admin" : "Mod"}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground truncate">
                             {user.functie}
                           </p>
